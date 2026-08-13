@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pico Spotify Bridge</title>
+
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .card {
+      width: min(90%, 400px);
+      padding: 25px;
+      text-align: center;
+      background: #1e1e1e;
+      border-radius: 20px;
+    }
+
+    img {
+      width: 250px;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 5px 0;
+    }
+
+    h2 {
+      margin: 5px 0 20px;
+      color: #aaa;
+      font-weight: normal;
+    }
+
+    .progress {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .status {
+      margin-top: 15px;
+      color: #1ed760;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <img id="artwork" src="https://via.placeholder.com/250">
+
+  <h1 id="title">Nome da música</h1>
+
+  <h2 id="artist">Nome do artista</h2>
+
+  <div id="album">Nome do álbum</div>
+
+  <input
+    id="progress"
+    class="progress"
+    type="range"
+    min="0"
+    value="0"
+    disabled
+  >
+
+  <div id="time">0:00 / 0:00</div>
+
+  <div id="status" class="status">
+    ⏸️ Pausado
+  </div>
+
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+const title = params.get("title");
+const artist = params.get("artist");
+const album = params.get("album");
+const artworkUrl = params.get("artworkUrl");
+
+const durationMs = Number(params.get("durationMs") || 0);
+const positionMs = Number(params.get("positionMs") || 0);
+
+const isPlaying = params.get("isPlaying") === "true";
+
+if (title) {
+  document.getElementById("title").textContent = title;
+}
+
+if (artist) {
+  document.getElementById("artist").textContent = artist;
+}
+
+if (album) {
+  document.getElementById("album").textContent = album;
+}
+
+if (artworkUrl) {
+  document.getElementById("artwork").src = artworkUrl;
+}
+
+const progress = document.getElementById("progress");
+
+progress.max = durationMs;
+progress.value = positionMs;
+
+function formatTime(ms) {
+
+  const seconds = Math.floor(ms / 1000);
+
+  const minutes = Math.floor(seconds / 60);
+
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${remainingSeconds
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+document.getElementById("time").textContent =
+  `${formatTime(positionMs)} / ${formatTime(durationMs)}`;
+
+document.getElementById("status").textContent =
+  isPlaying ? "▶️ Tocando" : "⏸️ Pausado";
+
+</script>
+
+</body>
+</html>
