@@ -3,33 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Pico Spotify Bridge</title>
 
   <style>
     body {
       margin: 0;
       min-height: 100vh;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       background: #121212;
       color: white;
+
       font-family: Arial, sans-serif;
     }
 
     .card {
       width: min(90%, 400px);
+
       padding: 25px;
+
       text-align: center;
+
       background: #1e1e1e;
+
       border-radius: 20px;
     }
 
     img {
       width: 250px;
       height: 250px;
+
       object-fit: cover;
+
       border-radius: 12px;
+
       margin-bottom: 20px;
     }
 
@@ -39,34 +50,47 @@
 
     h2 {
       margin: 5px 0 20px;
+
       color: #aaa;
+
       font-weight: normal;
     }
 
     .progress {
       width: 100%;
+
       margin-top: 20px;
     }
 
     .status {
       margin-top: 15px;
+
       color: #1ed760;
     }
 
     button {
       margin-top: 20px;
+
       padding: 12px 20px;
+
       border: none;
+
       border-radius: 25px;
+
       background: #1ed760;
+
       color: black;
+
       font-size: 16px;
+
       font-weight: bold;
+
       cursor: pointer;
     }
 
     #error {
       margin-top: 15px;
+
       color: #ff5555;
     }
   </style>
@@ -76,13 +100,23 @@
 
 <div class="card">
 
-  <img id="artwork" src="https://via.placeholder.com/250">
+  <img
+    id="artwork"
+    src="https://via.placeholder.com/250"
+    alt="Capa"
+  >
 
-  <h1 id="title">Nome da música</h1>
+  <h1 id="title">
+    Nome da música
+  </h1>
 
-  <h2 id="artist">Nome do artista</h2>
+  <h2 id="artist">
+    Nome do artista
+  </h2>
 
-  <div id="album">Nome do álbum</div>
+  <div id="album">
+    Nome do álbum
+  </div>
 
   <input
     id="progress"
@@ -93,7 +127,9 @@
     disabled
   >
 
-  <div id="time">0:00 / 0:00</div>
+  <div id="time">
+    0:00 / 0:00
+  </div>
 
   <div id="status" class="status">
     ⏸️ Pausado
@@ -107,21 +143,20 @@
 
 </div>
 
+
 <script>
 
 /* =========================================================
    CONFIGURAÇÃO
    ========================================================= */
 
-const CLIENT_ID = "7e599605af6f426296acac0b92408a6f";
+const CLIENT_ID =
+  "7e599605af6f426296acac0b92408a6f";
+
 
 const REDIRECT_URI =
   "https://juliagherardic-coder.github.io/pico-spotify-bridge/";
 
-
-/*
-   ENDPOINT DA PICO 2 W
-*/
 
 const BRIDGE_URL =
   "https://pico-spotify-bridge.juliagherardic.workers.dev/now-playing.json";
@@ -235,23 +270,30 @@ async function loginSpotify() {
   const challenge =
     await createCodeChallenge(verifier);
 
+
   localStorage.setItem(
     "spotify_code_verifier",
     verifier
   );
 
+
   const params =
     new URLSearchParams({
 
-      client_id: CLIENT_ID,
+      client_id:
+        CLIENT_ID,
 
-      response_type: "code",
+      response_type:
+        "code",
 
-      redirect_uri: REDIRECT_URI,
+      redirect_uri:
+        REDIRECT_URI,
 
-      code_challenge_method: "S256",
+      code_challenge_method:
+        "S256",
 
-      code_challenge: challenge,
+      code_challenge:
+        challenge,
 
       scope:
         "user-read-currently-playing user-read-playback-state"
@@ -267,7 +309,7 @@ async function loginSpotify() {
 
 
 /* =========================================================
-   TOKEN
+   PEGAR TOKEN
    ========================================================= */
 
 async function getAccessToken(code) {
@@ -276,6 +318,7 @@ async function getAccessToken(code) {
     localStorage.getItem(
       "spotify_code_verifier"
     );
+
 
   if (!verifier) {
 
@@ -289,12 +332,14 @@ async function getAccessToken(code) {
   const body =
     new URLSearchParams({
 
-      client_id: CLIENT_ID,
+      client_id:
+        CLIENT_ID,
 
       grant_type:
         "authorization_code",
 
-      code: code,
+      code:
+        code,
 
       redirect_uri:
         REDIRECT_URI,
@@ -316,7 +361,8 @@ async function getAccessToken(code) {
             "application/x-www-form-urlencoded"
         },
 
-        body: body
+        body:
+          body
       }
     );
 
@@ -324,7 +370,7 @@ async function getAccessToken(code) {
   if (!response.ok) {
 
     throw new Error(
-      "Não foi possível obter o token."
+      "Não foi possível obter o token do Spotify."
     );
 
   }
@@ -356,31 +402,43 @@ async function getAccessToken(code) {
 
 
 /* =========================================================
-   ENVIAR DADOS PARA A PICO
+   ENVIAR DADOS PARA O WORKER
    ========================================================= */
 
 async function sendToBridge(data) {
 
   try {
 
-    await fetch(
-      BRIDGE_URL,
-      {
-        method: "POST",
+    const response =
+      await fetch(
+        BRIDGE_URL,
+        {
+          method: "POST",
 
-        headers: {
-          "Content-Type":
-            "application/json"
-        },
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
 
-        body: JSON.stringify(data)
-      }
-    );
+          body:
+            JSON.stringify(data)
+        }
+      );
+
+
+    if (!response.ok) {
+
+      console.error(
+        "Worker respondeu com erro:",
+        response.status
+      );
+
+    }
 
   } catch (error) {
 
     console.error(
-      "Erro enviando dados para a Pico:",
+      "Erro enviando dados para o Worker:",
       error
     );
 
@@ -390,7 +448,7 @@ async function sendToBridge(data) {
 
 
 /* =========================================================
-   MÚSICA ATUAL
+   BUSCAR MÚSICA ATUAL
    ========================================================= */
 
 async function getCurrentlyPlaying() {
@@ -402,7 +460,9 @@ async function getCurrentlyPlaying() {
 
 
   if (!token) {
+
     return;
+
   }
 
 
@@ -418,6 +478,10 @@ async function getCurrentlyPlaying() {
     );
 
 
+  /* =====================================================
+     NENHUMA MÚSICA
+     ===================================================== */
+
   if (response.status === 204) {
 
     const emptyData = {
@@ -428,16 +492,39 @@ async function getCurrentlyPlaying() {
 
       album: "",
 
-      artworkUrl: "",
+      isPlaying: false,
 
       positionMs: 0,
 
       durationMs: 0,
 
-      isPlaying: false
+      coverUrl: "",
+
+      trackId: ""
 
     };
 
+
+    titleElement.textContent =
+      "Nenhuma música";
+
+    artistElement.textContent =
+      "";
+
+    albumElement.textContent =
+      "";
+
+    artwork.src =
+      "https://via.placeholder.com/250";
+
+    progress.value =
+      0;
+
+    progress.max =
+      0;
+
+    timeElement.textContent =
+      "0:00 / 0:00";
 
     statusElement.textContent =
       "⏸️ Nenhuma música tocando";
@@ -453,17 +540,24 @@ async function getCurrentlyPlaying() {
   }
 
 
+  /* =====================================================
+     TOKEN EXPIRADO
+     ===================================================== */
+
   if (response.status === 401) {
 
     localStorage.removeItem(
       "spotify_access_token"
     );
 
+
     loginButton.style.display =
       "block";
 
+
     statusElement.textContent =
       "🔐 Faça login novamente";
+
 
     return;
 
@@ -494,6 +588,10 @@ async function getCurrentlyPlaying() {
     data.item;
 
 
+  /* =====================================================
+     DADOS
+     ===================================================== */
+
   const title =
     track.name || "";
 
@@ -501,7 +599,8 @@ async function getCurrentlyPlaying() {
   const artist =
     track.artists
       .map(
-        a => a.name
+        artist =>
+          artist.name
       )
       .join(", ");
 
@@ -512,20 +611,30 @@ async function getCurrentlyPlaying() {
       : "";
 
 
-  const artworkUrl =
+  const coverUrl =
     track.album &&
     track.album.images &&
     track.album.images.length > 0
+
       ? track.album.images[0].url
+
       : "";
 
 
+  const trackId =
+    track.id || "";
+
+
   const durationMs =
-    track.duration_ms || 0;
+    Number(
+      track.duration_ms || 0
+    );
 
 
   const positionMs =
-    data.progress_ms || 0;
+    Number(
+      data.progress_ms || 0
+    );
 
 
   const isPlaying =
@@ -533,7 +642,7 @@ async function getCurrentlyPlaying() {
 
 
   /* =====================================================
-     MOSTRAR NA PÁGINA
+     ATUALIZAR INTERFACE
      ===================================================== */
 
   titleElement.textContent =
@@ -548,10 +657,10 @@ async function getCurrentlyPlaying() {
     album;
 
 
-  if (artworkUrl) {
+  if (coverUrl) {
 
     artwork.src =
-      artworkUrl;
+      coverUrl;
 
   }
 
@@ -570,7 +679,9 @@ async function getCurrentlyPlaying() {
 
   statusElement.textContent =
     isPlaying
+
       ? "▶️ Tocando"
+
       : "⏸️ Pausado";
 
 
@@ -618,11 +729,21 @@ async function getCurrentlyPlaying() {
   );
 
 
-  if (artworkUrl) {
+  if (coverUrl) {
 
     urlParams.set(
-      "artworkUrl",
-      artworkUrl
+      "coverUrl",
+      coverUrl
+    );
+
+  }
+
+
+  if (trackId) {
+
+    urlParams.set(
+      "trackId",
+      trackId
     );
 
   }
@@ -642,7 +763,7 @@ async function getCurrentlyPlaying() {
 
 
   /* =====================================================
-     ENVIAR PARA O CLOUDFLARE
+     ENVIAR PARA O WORKER
      ===================================================== */
 
   await sendToBridge({
@@ -656,8 +777,8 @@ async function getCurrentlyPlaying() {
     album:
       album,
 
-    artworkUrl:
-      artworkUrl,
+    isPlaying:
+      isPlaying,
 
     positionMs:
       positionMs,
@@ -665,8 +786,11 @@ async function getCurrentlyPlaying() {
     durationMs:
       durationMs,
 
-    isPlaying:
-      isPlaying
+    coverUrl:
+      coverUrl,
+
+    trackId:
+      trackId
 
   });
 
@@ -680,11 +804,15 @@ async function getCurrentlyPlaying() {
 function formatTime(ms) {
 
   const seconds =
-    Math.floor(ms / 1000);
+    Math.floor(
+      ms / 1000
+    );
 
 
   const minutes =
-    Math.floor(seconds / 60);
+    Math.floor(
+      seconds / 60
+    );
 
 
   const remainingSeconds =
@@ -735,6 +863,7 @@ async function start() {
       loginButton.style.display =
         "none";
 
+
       statusElement.textContent =
         "🔄 Conectando ao Spotify...";
 
@@ -755,8 +884,10 @@ async function start() {
 
       console.error(error);
 
+
       errorElement.textContent =
         error.message;
+
 
       return;
 
@@ -785,6 +916,7 @@ async function start() {
 
       console.error(error);
 
+
       errorElement.textContent =
         error.message;
 
@@ -796,7 +928,7 @@ async function start() {
 
 
 /* =========================================================
-   BOTÃO
+   BOTÃO DE LOGIN
    ========================================================= */
 
 loginButton.addEventListener(
@@ -806,7 +938,7 @@ loginButton.addEventListener(
 
 
 /* =========================================================
-   COMEÇAR
+   INICIAR
    ========================================================= */
 
 start();
@@ -826,7 +958,9 @@ setInterval(
 
 
     if (!token) {
+
       return;
+
     }
 
 
@@ -836,7 +970,9 @@ setInterval(
 
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        error
+      );
 
     }
 
